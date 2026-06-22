@@ -1,0 +1,110 @@
+// Prisma schema for the Apartment Lottery System
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =================== Admin (auth) ===================
+model Admin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  fullName     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// =================== Sites (German, Ayer-tena, Girar) ===================
+model Site {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique // "German", "Ayer-tena", "Girar"
+  createdAt DateTime @default(now())
+
+  houses      House[]
+  applicants  Applicant[]
+  lotteries   Lottery[]
+}
+
+// =================== House inventory ===================
+// The available pool of houses for a given (site, area, bedType).
+// Each row represents ONE available house of that combination.
+model House {
+  id          Int      @id @default(autoincrement())
+  siteId      Int
+  blockNumber String
+  houseNumber String
+  floorNumber Int
+  bedType     String   // "1bed" | "2bed" | "3bed"
+  totalArea   Float    // e.g. 74.5
+  isAllocated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  site           Site            @relation(fields: [siteId], references: [id])
+  lotteryResults LotteryResult[]
+
+  @@index([siteId, bedType, totalArea])
+}
+
+// =================== Applicants ===================
+// Each applicant picks ONE preferred (site, area, bedType).
+// Identified by employeeId.
+model Applicant {
+  id         Int      @id @default(autoincrement())
+  employeeId String   @unique
+  fullName   String?
+  siteId     Int
+  bedType    String   // "1bed" | "2bed" | "3bed"
+  totalArea  Float
+  createdAt  DateTime @default(now())
+
+  site          Site            @relation(fields: [siteId], references: [id])
+  lotteryResults LotteryResult[]
+
+  @@index([siteId, bedType, totalArea])
+}
+
+// =================== Lottery draws ===================
+// Each draw is for exactly ONE (site, bedType, totalArea) combination.
+// Lottery can only be drawn ONCE per combination (enforced in service).
+model Lottery {
+  id              Int      @id @default(autoincrement())
+  siteId          Int
+  bedType         String
+  totalArea       Float
+  totalHouses     Int      // available houses for that combination
+  totalApplicants Int
+  winnersCount    Int
+  waitlistCount   Int
+  drawnById       Int      // admin id
+  drawnAt         DateTime @default(now())
+
+  site    Site            @relation(fields: [siteId], references: [id])
+  results LotteryResult[]
+
+  @@unique([siteId, bedType, totalArea]) // one draw per combination
+  @@index([drawnAt])
+}
+
+// =================== Per-applicant lottery result ===================
+model LotteryResult {
+  id          Int      @id @default(autoincrement())
+  lotteryId   Int
+  applicantId Int
+  houseId     Int?     // assigned house (null for waitlist)
+  status      String   // "WINNER" | "WAITLIST"
+  position    Int      // 1..winnersCount for winners, 1..waitlistCount for waitlist
+  createdAt   DateTime @default(now())
+
+  lottery   Lottery   @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  house     House?    @relation(fields: [houseId], references: [id])
+
+  @@unique([lotteryId, applicantId])
+  @@index([lotteryId, status])
+}
