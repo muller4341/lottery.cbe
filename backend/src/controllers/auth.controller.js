@@ -1,3 +1,42 @@
+// // Auth controller
+// const bcrypt = require('bcryptjs');
+// const prisma = require('../lib/prisma');
+// const { signToken } = require('../lib/jwt');
+
+// exports.login = async (req, res) => {
+//   try {
+//     const { username, password } = req.body || {};
+//     if (!username || !password) {
+//       return res.status(400).json({ ok: false, message: 'username and password are required' });
+//     }
+//     const admin = await prisma.admin.findUnique({ where: { username } });
+//     if (!admin) return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+
+//     const match = await bcrypt.compare(password, admin.passwordHash);
+//     if (!match) return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+
+//     const token = signToken({ id: admin.id, username: admin.username });
+//     return res.json({
+//       ok: true,
+//       token,
+//       admin: { id: admin.id, username: admin.username, fullName: admin.fullName },
+//     });
+//   } catch (err) {
+//     console.error('login error', err);
+//     return res.status(500).json({ ok: false, message: 'Server error' });
+//   }
+// };
+
+// exports.me = async (req, res) => {
+//   const admin = await prisma.admin.findUnique({ where: { id: req.admin.id } });
+//   if (!admin) return res.status(404).json({ ok: false, message: 'Not found' });
+//   return res.json({
+//     ok: true,
+//     admin: { id: admin.id, username: admin.username, fullName: admin.fullName },
+//   });
+// };
+
+
 // Auth controller
 const bcrypt = require('bcryptjs');
 const prisma = require('../lib/prisma');
@@ -7,19 +46,37 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body || {};
     if (!username || !password) {
-      return res.status(400).json({ ok: false, message: 'username and password are required' });
+      return res.status(400).json({ ok: false, message: 'Username and password are required' });
     }
-    const admin = await prisma.admin.findUnique({ where: { username } });
-    if (!admin) return res.status(401).json({ ok: false, message: 'Invalid credentials' });
 
-    const match = await bcrypt.compare(password, admin.passwordHash);
-    if (!match) return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+    const user = await prisma.user.findUnique({ 
+      where: { username } 
+    });
 
-    const token = signToken({ id: admin.id, username: admin.username });
+    if (!user) {
+      return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+    }
+
+    const token = signToken({ 
+      id: user.id, 
+      username: user.username,
+      role: user.role 
+    });
+
     return res.json({
       ok: true,
       token,
-      admin: { id: admin.id, username: admin.username, fullName: admin.fullName },
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        fullName: user.fullName,
+        role: user.role 
+      },
     });
   } catch (err) {
     console.error('login error', err);
@@ -28,10 +85,26 @@ exports.login = async (req, res) => {
 };
 
 exports.me = async (req, res) => {
-  const admin = await prisma.admin.findUnique({ where: { id: req.admin.id } });
-  if (!admin) return res.status(404).json({ ok: false, message: 'Not found' });
-  return res.json({
-    ok: true,
-    admin: { id: admin.id, username: admin.username, fullName: admin.fullName },
-  });
+  try {
+    const user = await prisma.user.findUnique({ 
+      where: { id: req.user.id }   // Changed from req.admin
+    });
+
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'User not found' });
+    }
+
+    return res.json({
+      ok: true,
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        fullName: user.fullName,
+        role: user.role 
+      },
+    });
+  } catch (err) {
+    console.error('me error', err);
+    return res.status(500).json({ ok: false, message: 'Server error' });
+  }
 };

@@ -15,21 +15,39 @@ export default function LoginPage() {
     return null;
   }
 
-  async function submit(e) {
-    e.preventDefault();
-    setErr("");
-    setBusy(true);
-    try {
-      const data = await login(username.trim(), password);
-      if (!data.ok) setErr(data.message || "Login failed");
-      else nav("/", { replace: true });
-    } catch (e) {
-      setErr(e?.response?.data?.message || "Login failed");
-    } finally {
-      setBusy(false);
-    }
-  }
+  // async function submit(e) {
+  //   e.preventDefault();
+  //   setErr("");
+  //   setBusy(true);
+  //   try {
+  //     const data = await login(username.trim(), password);
+  //     if (!data.ok) setErr(data.message || "Login failed");
+  //     else nav("/", { replace: true });
+  //   } catch (e) {
+  //     setErr(e?.response?.data?.message || "Login failed");
+  //   } finally {
+  //     setBusy(false);
+  //   }
+  // }
+async function submit(e) {
+  e.preventDefault();
+  setErr("");
+  setBusy(true);
 
+  try {
+    const result = await login(username.trim(), password);
+
+    if (result.ok) {
+      nav("/", { replace: true });
+    } else {
+      setErr(result.message || "Login failed");
+    }
+  } catch (e) {
+    setErr("Login failed. Please check your credentials.");
+  } finally {
+    setBusy(false);
+  }
+}
   return (
     <div className="min-h-screen grid lg:grid-cols-2 relative font-sans bg-slate-50 overflow-hidden">
       

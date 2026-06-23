@@ -19,7 +19,7 @@ export default function DashboardPage() {
     (async () => {
       try {
         const [s, st, hg, ag, lr] = await Promise.all([
-          api.get("/sites"),
+          api.get('/houses/sites'),
           api.get("/lottery/stats"),
           api.get("/houses/summary"),
           api.get("/applicants/summary"),

@@ -4,10 +4,8 @@ const express = require('express');
 const cors = require('cors');
 
 const prisma = require('./lib/prisma');
-const { ensureDefaults } = require('./controllers/sites.controller');
 
 const authRoutes = require('./routes/auth.routes');
-const sitesRoutes = require('./routes/sites.routes');
 const housesRoutes = require('./routes/houses.routes');
 const applicantsRoutes = require('./routes/applicants.routes');
 const lotteryRoutes = require('./routes/lottery.routes');
@@ -19,7 +17,6 @@ app.use(express.json({ limit: '2mb' }));
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
 
 app.use('/api/auth', authRoutes);
-app.use('/api/sites', sitesRoutes);
 app.use('/api/houses', housesRoutes);
 app.use('/api/applicants', applicantsRoutes);
 app.use('/api/lottery', lotteryRoutes);
@@ -35,7 +32,6 @@ const PORT = process.env.PORT || 5000;
 async function bootstrap() {
   try {
     await prisma.$connect();
-    await ensureDefaults();
     app.listen(PORT, () => {
       console.log(`API listening on http://localhost:${PORT}`);
     });
