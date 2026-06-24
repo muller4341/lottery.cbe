@@ -376,7 +376,7 @@ export default function ApplicantsPage() {
                 {summary.map((g, i) => (
                   <tr key={`${g.site}-${g.bedroom}-${g.area}-${i}`} className="border-b last:border-0">
                     <td className="py-2 pr-4">{g.site}</td>
-                    <td className="py-2 pr-4"><span className="badge-blue">{g.bedroom}</span></td>
+                    <td className="py-2 pr-4"><span className="badge-blue">{g.bedroom} bed</span></td>
                     <td className="py-2 pr-4">{g.area}</td>
                     <td className="py-2 pr-4 text-right tabular-nums font-medium">{g.count}</td>
                   </tr>
@@ -420,10 +420,10 @@ export default function ApplicantsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-slate-500 border-b">
-                  <th className="py-2 pr-3">Employee ID</th>
+                  <th className="py-2 pr-3">Applicant ID</th>
                   <th className="py-2 pr-3">Full Name</th>
                   <th className="py-2 pr-3">Site</th>
-                  <th className="py-2 pr-3">Bed</th>
+                  <th className="py-2 pr-3">Bed Type</th>
                   <th className="py-2 pr-3">Area (m²)</th>
                 </tr>
               </thead>
@@ -433,7 +433,7 @@ export default function ApplicantsPage() {
                     <td className="py-2 pr-3 font-mono">{a.idCode}</td>
                     <td className="py-2 pr-3">{a.username || '—'}</td>
                     <td className="py-2 pr-3">{a.site}</td>
-                    <td className="py-2 pr-3"><span className="badge-blue">{a.bedroom}</span></td>
+                    <td className="py-2 pr-3"><span className="badge-blue">{a.bedroom} bed</span></td>
                     <td className="py-2 pr-3">{a.area}</td>
                   </tr>
                 ))}

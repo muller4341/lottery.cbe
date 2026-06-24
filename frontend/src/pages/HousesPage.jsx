@@ -628,7 +628,7 @@ export default function HousesPage() {
                 {summary.map((g, i) => (
                   <tr key={i} className="border-b last:border-0">
                     <td className="py-2 pr-4">{g.site}</td>
-                    <td className="py-2 pr-4"><span className="badge-blue">{g.bedroom}</span></td>
+                    <td className="py-2 pr-4"><span className="badge-blue">{g.bedroom} bed</span></td>
                     <td className="py-2 pr-4">{g.area}</td>
                     <td className="py-2 pr-4 text-right tabular-nums font-medium">{g.count}</td>
                   </tr>
@@ -703,7 +703,7 @@ export default function HousesPage() {
                   <th className="py-2 pr-3">Block</th>
                   <th className="py-2 pr-3">House Number</th>
                   <th className="py-2 pr-3">Floor</th>
-                  <th className="py-2 pr-3">Bed</th>
+                  <th className="py-2 pr-3">Bed Type</th>
                   <th className="py-2 pr-3">Area (m²)</th>
                   <th className="py-2 pr-3">Status</th>
                 </tr>
@@ -716,7 +716,7 @@ export default function HousesPage() {
                     <td className="py-2 pr-3">{h.block}</td>
                     <td className="py-2 pr-3">{h.houseNumber}</td>
                     <td className="py-2 pr-3">{h.floor}</td>
-                    <td className="py-2 pr-3"><span className="badge-blue">{h.bedroom}</span></td>
+                    <td className="py-2 pr-3"><span className="badge-blue">{h.bedroom} bed</span></td>
                     <td className="py-2 pr-3">{h.area}</td>
                     <td className="py-2 pr-3">
                       {h.status === "PROVIDED" ? (

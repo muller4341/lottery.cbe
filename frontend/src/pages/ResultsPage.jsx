@@ -307,7 +307,6 @@ export default function ResultsPage() {
     const wCount = active.filter(r => r.status === 'WINNER').length;
     const wlCount = active.filter(r => r.status === 'WAITLIST').length;
     
-    // Find unique house counts matching this draw run context
     const houseCount = wCount; 
 
     return {
@@ -367,7 +366,7 @@ export default function ResultsPage() {
                         <a
                           className="btn text-white text-xs px-3 py-1.5 rounded-md"
                           style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', boxShadow: '0 2px 4px rgba(16,185,129,0.2)' }}
-                          href={`/api/lottery/download/${l.lotteryRunId}`}
+                          href={`/api/lottery/download/${l.lotteryRunId}`} // Fixed route matching backend
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => attachToken(e)}
@@ -405,7 +404,7 @@ export default function ResultsPage() {
         <a
           className="btn text-white px-5 py-2.5 rounded-lg font-semibold"
           style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', boxShadow: '0 4px 14px rgba(16,185,129,0.4)' }}
-          href={`/api/lottery/download/${id}`}
+          href={`/api/lottery/download/${id}`} // Fixed route matching backend
           target="_blank"
           rel="noreferrer"
           onClick={attachToken}
@@ -464,7 +463,6 @@ function KPI({ label, value, tone = 'slate' }) {
   );
 }
 
-// Fixed syntax typo at closing of the file container definitions
 function TabButton({ active, onClick, children }) {
   return (
     <button
@@ -490,20 +488,28 @@ function ResultsTable({ rows, showHouse, emptyMessage }) {
         <thead>
           <tr className="text-left text-slate-500 border-b">
             <th className="py-2 pr-3 w-12">#</th>
-            <th className="py-2 pr-3">Employee ID</th>
+            <th className="py-2 pr-3">Applicant ID</th>
             <th className="py-2 pr-3">Full Name</th>
-            {showHouse && <>
-              <th className="py-2 pr-3">House Number</th>
-              <th className="py-2 pr-3">Floor</th>
-            </>}
+            <th className="py-2 pr-3">Bed Type</th>
+            <th className="py-2 pr-3">Area (m²)</th>
+            <th className="py-2 pr-3">Site</th>
+            {showHouse && (
+              <>
+                <th className="py-2 pr-3">House Number</th>
+                <th className="py-2 pr-3">Floor</th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
             <tr key={r.id || i} className="border-b last:border-0 hover:bg-slate-50">
               <td className="py-2 pr-3 text-slate-500">{i + 1}</td>
-              <td className="py-2 pr-3 font-mono">{r.idCode}</td>
+              <td className="py-2 pr-3 font-mono">{r.applicant?.idCode || '—'}</td>
               <td className="py-2 pr-3">{r.username || '—'}</td>
+              <td className="py-2 pr-3">{r.bedroom || '—'} Bed</td>
+              <td className="py-2 pr-3">{r.area || '—'}</td>
+              <td className="py-2 pr-3">{r.site || '—'}</td>
               {showHouse && (
                 <>
                   <td className="py-2 pr-3">{r.houseNumber || '—'}</td>
@@ -520,7 +526,13 @@ function ResultsTable({ rows, showHouse, emptyMessage }) {
 
 function attachToken(e) {
   e.preventDefault();
-  const href = e.currentTarget.getAttribute('href');
+  let href = e.currentTarget.getAttribute('href');
+  
+  // Force the fetch call to talk directly to your backend server port (5000)
+  if (href.startsWith('/api')) {
+    href = `http://localhost:5000${href}`;
+  }
+
   const token = localStorage.getItem('token');
   fetch(href, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
     .then(async (r) => {

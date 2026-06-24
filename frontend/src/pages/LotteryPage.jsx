@@ -1,11 +1,8 @@
 
-
-
 // import { useEffect, useMemo, useState, useRef } from 'react';
 // import { useNavigate } from 'react-router-dom';
 // import api from '../api/client';
 // import SpinningCardAnimation from '../components/SpinningCardAnimation';
-
 // export default function LotteryPage() {
 //   const nav = useNavigate();
 //   const [sites, setSites] = useState([]);
@@ -22,7 +19,6 @@
 //   const [summary, setSummary] = useState(null);
 //   const [confirmOpen, setConfirmOpen] = useState(false);
 
-//   // Spinning card animation state variables for sharing data
 //   const [drawApplicants, setDrawApplicants] = useState([]);
 //   const [drawWinners, setDrawWinners] = useState([]);
 //   const [drawResults, setDrawResults] = useState([]);
@@ -30,58 +26,49 @@
 
 //   useEffect(() => {
 //     (async () => {
-//       const [s, hg, ag, lr] = await Promise.all([
-//         api.get('/sites'),
-//         api.get('/houses/summary'),
-//         api.get('/applicants/summary'),
-//         api.get('/lottery/lotteries'),
-//       ]);
-//       setSites(s.data.sites || []);
-//       setHouseGroups(hg.data.groups || []);
-//       setApplicantGroups(ag.data.groups || []);
-//       setLotteries(lr.data.lotteries || []);
+//       try {
+//         const [s, hg, ag, lr] = await Promise.all([
+//           api.get('/houses/sites'),
+//           api.get('/houses/summary'),
+//           api.get('/applicants/summary'),
+//           api.get('/lottery/lotteries'),
+//         ]);
+//         setSites(s.data.sites || []);
+//         setHouseGroups(hg.data.groups || []);
+//         setApplicantGroups(ag.data.groups || []);
+//         setLotteries(lr.data.lotteries || []);
+//       } catch (e) {
+//         console.error("Failed to load initial metrics scope", e);
+//       }
 //     })();
 //   }, []);
 
-//   // 1. DYNAMIC FILTER: Only show sites that have available houses
 //   const availableSites = useMemo(() => {
-//     // Extract site IDs from groups that have houses
-//     const activeSiteIds = new Set(
-//       houseGroups.filter((g) => g.count > 0).map((g) => g.siteId)
-//     );
-//     // Filter master sites array to only include those active IDs
-//     return sites.filter((s) => activeSiteIds.has(s.id));
+//     const activeSites = new Set(houseGroups.filter((g) => g.count > 0).map((g) => g.site));
+//     return sites.filter((s) => activeSites.has(s));
 //   }, [sites, houseGroups]);
 
-//   // 2. DYNAMIC FILTER: Only show bed types available for the chosen siteId
 //   const availableBedTypes = useMemo(() => {
 //     if (!siteId) return [];
-//     const filtered = houseGroups.filter(
-//       (g) => g.siteId === Number(siteId) && g.count > 0
-//     );
-//     return [...new Set(filtered.map((g) => g.bedType))];
+//     const filtered = houseGroups.filter((g) => g.site === siteId && g.count > 0);
+//     return [...new Set(filtered.map((g) => String(g.bedroom)))];
 //   }, [siteId, houseGroups]);
 
-//   // 3. DYNAMIC FILTER: Only show total areas available for the chosen (siteId, bedType)
 //   const availableAreas = useMemo(() => {
 //     if (!siteId || !bedType) return [];
-//     const key = (g) => g.siteId === Number(siteId) && g.bedType === bedType && g.count > 0;
-    
-//     // Only mapping from house groups to match property inventory availability
-//     const fromH = houseGroups.filter(key).map((g) => g.totalArea);
-//     return [...new Set(fromH)].sort((a, b) => a - b);
+//     const fromH = houseGroups
+//       .filter((g) => g.site === siteId && String(g.bedroom) === bedType && g.count > 0)
+//       .map((g) => g.area);
+//     return [...new Set(fromH)].sort((a, b) => parseFloat(a) - parseFloat(b));
 //   }, [siteId, bedType, houseGroups]);
 
-//   // Live preview of the draw scope
 //   const preview = useMemo(() => {
-//     const sid = Number(siteId);
-//     const area = Number(totalArea);
-//     if (!sid || !bedType || Number.isNaN(area)) return null;
+//     if (!siteId || !bedType || !totalArea) return null;
 //     const houses = houseGroups.find(
-//       (g) => g.siteId === sid && g.bedType === bedType && Number(g.totalArea) === area
+//       (g) => g.site === siteId && String(g.bedroom) === bedType && g.area === totalArea
 //     );
 //     const applicants = applicantGroups.find(
-//       (g) => g.siteId === sid && g.bedType === bedType && Number(g.totalArea) === area
+//       (g) => g.site === siteId && String(g.bedroom) === bedType && g.area === totalArea
 //     );
 //     const houseCount = houses?.count || 0;
 //     const appCount = applicants?.count || 0;
@@ -90,9 +77,8 @@
 //     return { houseCount, appCount, winners, waitlist };
 //   }, [siteId, bedType, totalArea, houseGroups, applicantGroups]);
 
-//   // Already-drawn combinations
 //   const drawnKeys = useMemo(() => {
-//     return new Set(lotteries.map((l) => `${l.siteId}|${l.bedType}|${l.totalArea}`));
+//     return new Set(lotteries.map((l) => `${l.site}|${l.bedroom}|${l.area}`));
 //   }, [lotteries]);
 
 //   const isAlreadyDrawn = useMemo(() => {
@@ -101,39 +87,32 @@
 //   }, [siteId, bedType, totalArea, drawnKeys]);
 
 //   async function runDraw() {
-//     setErr('');
-//     setSummary(null);
-//     setDrawing(true);
-//     setDrawSummary(null);
-//     setDrawWinners([]);
-//     setDrawApplicants([]);
-//     setDrawResults([]);
+//     setErr(''); setSummary(null); setDrawing(true);
+//     setDrawSummary(null); setDrawWinners([]); setDrawApplicants([]); setDrawResults([]);
+
+//     const uniqueRunId = `RUN-${Date.now()}`;
 
 //     try {
 //       const applicantsRes = await api.get('/applicants', {
-//         params: {
-//           siteId: Number(siteId),
-//           bedType,
-//           totalArea: Number(totalArea),
-//         },
+//         params: { site: siteId, bedroom: Number(bedType), area: totalArea },
 //       });
 //       const allApplicants = applicantsRes.data.applicants || [];
 //       setDrawApplicants(allApplicants);
 
 //       const { data } = await api.post('/lottery/draw', {
-//         siteId: Number(siteId),
-//         bedType,
-//         totalArea: Number(totalArea),
+//         site: siteId,
+//         bedroom: Number(bedType),
+//         area: totalArea,
+//         lotteryRunId: uniqueRunId,
 //       });
 
 //       if (!data.ok) {
 //         setErr(data.message || 'Draw failed');
-//         setDrawing(false);
-//         setConfirmOpen(false);
+//         setDrawing(false); setConfirmOpen(false);
 //         return;
 //       }
 
-//       const resultsRes = await api.get(`/lottery/lotteries/${data.lotteryId}`);
+//       const resultsRes = await api.get(`/lottery/lotteries/${uniqueRunId}`);
 //       const results = resultsRes.data.results || [];
 //       const winners = results.filter((r) => r.status === 'WINNER');
 
@@ -147,8 +126,7 @@
 //       });
 //     } catch (e) {
 //       console.error(e);
-//       const msg = e?.response?.data?.message || e.message;
-//       setErr(msg || 'Draw failed');
+//       setErr(e?.response?.data?.message || e.message || 'Draw failed');
 //       setDrawing(false);
 //     } finally {
 //       setConfirmOpen(false);
@@ -159,7 +137,7 @@
 //     <div className="space-y-6 relative">
 //       {drawing && (
 //         <SpinningCardAnimation
-//           siteName={sites.find((s) => s.id === Number(siteId))?.name}
+//           siteName={siteId}
 //           bedType={bedType}
 //           totalArea={totalArea}
 //           applicants={drawApplicants}
@@ -190,8 +168,8 @@
 //                 onChange={(e) => { setSiteId(e.target.value); setBedType(''); setTotalArea(''); }}
 //               >
 //                 <option value="">— select site —</option>
-//                 {availableSites.map((s) => (
-//                   <option key={s.id} value={s.id}>{s.name}</option>
+//                 {availableSites.map((s, i) => (
+//                   <option key={i} value={s}>{s}</option>
 //                 ))}
 //               </select>
 //             </div>
@@ -204,8 +182,8 @@
 //                 disabled={!siteId}
 //               >
 //                 <option value="">— select bed —</option>
-//                 {availableBedTypes.map((type) => (
-//                   <option key={type} value={type}>{type}</option>
+//                 {availableBedTypes.map((type, i) => (
+//                   <option key={i} value={type}>{type}</option>
 //                 ))}
 //               </select>
 //             </div>
@@ -218,8 +196,8 @@
 //                 disabled={!siteId || !bedType}
 //               >
 //                 <option value="">— select area —</option>
-//                 {availableAreas.map((a) => (
-//                   <option key={a} value={a}>{a}</option>
+//                 {availableAreas.map((a, i) => (
+//                   <option key={i} value={a}>{a}</option>
 //                 ))}
 //               </select>
 //             </div>
@@ -302,17 +280,17 @@
 //             <div className="py-8 text-center text-sm text-slate-500">No lotteries drawn yet.</div>
 //           ) : (
 //             <ul className="space-y-3">
-//               {lotteries.map((l) => (
-//                 <li key={l.id} className="flex items-center justify-between gap-3">
+//               {lotteries.map((l, idx) => (
+//                 <li key={l.id || idx} className="flex items-center justify-between gap-3">
 //                   <div className="min-w-0">
 //                     <div className="font-medium text-slate-800 truncate">
-//                       {l.site.name} · {l.bedType} · {l.totalArea}m²
+//                       {l.site} · {l.bedroom} Bed · {l.area}m²
 //                     </div>
 //                     <div className="text-xs text-slate-500">
-//                       {new Date(l.drawnAt).toLocaleString()} · {l.winnersCount} W / {l.waitlistCount} WL
+//                       {new Date(l.drawDate).toLocaleString()} · {l.status || 'Drawn'}
 //                     </div>
 //                   </div>
-//                   <button className="btn-secondary text-xs" onClick={() => nav(`/results/${l.id}`)}>
+//                   <button className="btn-secondary text-xs" onClick={() => nav(`/results/${l.lotteryRunId}`)}>
 //                     View
 //                   </button>
 //                 </li>
@@ -325,7 +303,7 @@
 //       {confirmOpen && (
 //         <ConfirmDialog
 //           preview={preview}
-//           siteName={sites.find((s) => s.id === Number(siteId))?.name}
+//           siteName={siteId}
 //           bedType={bedType}
 //           area={totalArea}
 //           onCancel={() => setConfirmOpen(false)}
@@ -358,7 +336,7 @@
 
 // function UsersIconMini(props) { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>; }
 // function BuildingIconMini(props) { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M9 9h6M9 13h6M9 17h6" /></svg>; }
-// function AwardIconMini(props) { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87(1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>; }
+// function AwardIconMini(props) { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>; }
 // function WaitlistIconMini(props) { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>; }
 
 // function ConfirmDialog({ preview, siteName, bedType, area, onCancel, onConfirm, busy }) {
@@ -369,7 +347,7 @@
 //         <h3 className="text-lg font-semibold text-slate-900">Confirm lottery draw</h3>
 //         <dl className="mt-4 space-y-2 text-sm">
 //           <Row k="Site" v={siteName} />
-//           <Row k="Bed type" v={bedType} />
+//           <Row k="Bed type" v={`${bedType} Bed`} />
 //           <Row k="Area" v={`${area} m²`} />
 //           <Row k="Houses" v={preview.houseCount} />
 //           <Row k="Applicants" v={preview.appCount} />
@@ -382,7 +360,9 @@
 //     </div>
 //   );
 // }
-// function Row({ k, v }) { return <div className="flex items-center justify-between border-b border-slate-100 pb-1"><dt className="text-slate-500">{k}</dt><dd className="font-medium text-slate-800">{v}</dd></div>; }import { useEffect, useMemo, useState, useRef } from 'react';
+// function Row({ k, v }) { return <div className="flex items-center justify-between border-b border-slate-100 pb-1"><dt className="text-slate-500">{k}</dt><dd className="font-medium text-slate-800">{v}</dd></div>; }
+
+
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
@@ -412,14 +392,15 @@ export default function LotteryPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [s, hg, ag, lr] = await Promise.all([
+        // Fixed destructuring to map perfectly with unallocated data arrays
+        const [s, unallocatedHousesRes, ag, lr] = await Promise.all([
           api.get('/houses/sites'),
-          api.get('/houses/summary'),
+          api.get('/lottery/unallocated-summary'),
           api.get('/applicants/summary'),
           api.get('/lottery/lotteries'),
         ]);
         setSites(s.data.sites || []);
-        setHouseGroups(hg.data.groups || []);
+        setHouseGroups(unallocatedHousesRes.data.groups || []);
         setApplicantGroups(ag.data.groups || []);
         setLotteries(lr.data.lotteries || []);
       } catch (e) {
@@ -428,23 +409,26 @@ export default function LotteryPage() {
     })();
   }, []);
 
+  // 1. Strict Filter Flow: Sites that have unallocated/available houses
   const availableSites = useMemo(() => {
     const activeSites = new Set(houseGroups.filter((g) => g.count > 0).map((g) => g.site));
     return sites.filter((s) => activeSites.has(s));
   }, [sites, houseGroups]);
 
+  // 2. Strict Filter Flow: ONLY show bed types that have available houses for the selected site
   const availableBedTypes = useMemo(() => {
     if (!siteId) return [];
     const filtered = houseGroups.filter((g) => g.site === siteId && g.count > 0);
     return [...new Set(filtered.map((g) => String(g.bedroom)))];
   }, [siteId, houseGroups]);
 
+  // 3. Strict Filter Flow: ONLY show areas that have available houses for the selected site + bed type
   const availableAreas = useMemo(() => {
     if (!siteId || !bedType) return [];
-    const fromH = houseGroups
-      .filter((g) => g.site === siteId && String(g.bedroom) === bedType && g.count > 0)
-      .map((g) => g.area);
-    return [...new Set(fromH)].sort((a, b) => parseFloat(a) - parseFloat(b));
+    const filtered = houseGroups.filter(
+      (g) => g.site === siteId && String(g.bedroom) === bedType && g.count > 0
+    );
+    return [...new Set(filtered.map((g) => g.area))].sort((a, b) => parseFloat(a) - parseFloat(b));
   }, [siteId, bedType, houseGroups]);
 
   const preview = useMemo(() => {
@@ -461,15 +445,6 @@ export default function LotteryPage() {
     const waitlist = Math.max(0, appCount - houseCount);
     return { houseCount, appCount, winners, waitlist };
   }, [siteId, bedType, totalArea, houseGroups, applicantGroups]);
-
-  const drawnKeys = useMemo(() => {
-    return new Set(lotteries.map((l) => `${l.site}|${l.bedroom}|${l.area}`));
-  }, [lotteries]);
-
-  const isAlreadyDrawn = useMemo(() => {
-    if (!siteId || !bedType || !totalArea) return false;
-    return drawnKeys.has(`${siteId}|${bedType}|${totalArea}`);
-  }, [siteId, bedType, totalArea, drawnKeys]);
 
   async function runDraw() {
     setErr(''); setSummary(null); setDrawing(true);
@@ -506,9 +481,19 @@ export default function LotteryPage() {
       setDrawSummary(data);
       setSummary(data);
 
-      api.get('/lottery/lotteries').then((lr) => {
-        setLotteries(lr.data.lotteries || []);
-      });
+      // Fixed: Refresh unallocated pools immediately after a draw completes
+      const [unallocatedHousesRes, ag, lr] = await Promise.all([
+        api.get('/lottery/unallocated-summary'),
+        api.get('/applicants/summary'),
+        api.get('/lottery/lotteries'),
+      ]);
+      setHouseGroups(unallocatedHousesRes.data.groups || []);
+      setApplicantGroups(ag.data.groups || []);
+      setLotteries(lr.data.lotteries || []);
+
+      // Clear selections since this specific combo is now allocated out of options
+      setSiteId(''); setBedType(''); setTotalArea('');
+
     } catch (e) {
       console.error(e);
       setErr(e?.response?.data?.message || e.message || 'Draw failed');
@@ -536,14 +521,13 @@ export default function LotteryPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Lottery Draw</h1>
         <p className="text-sm text-slate-500">
-          Pick a single (site, bed type, area) combination and draw the lottery. Each
-          combination can only be drawn once.
+          Pick a single (site, bed type, area) combination and draw the lottery. Only unallocated houses are listed.
         </p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="card p-5 lg:col-span-2 bg-white border border-slate-200 rounded-3xl shadow-sm">
-          <h2 className="font-semibold text-slate-900 mb-4">Filter & Draw</h2>
+          <h2 className="font-semibold text-slate-999 mb-4">Filter & Draw</h2>
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
               <label className="label">Site name</label>
@@ -568,7 +552,7 @@ export default function LotteryPage() {
               >
                 <option value="">— select bed —</option>
                 {availableBedTypes.map((type, i) => (
-                  <option key={i} value={type}>{type}</option>
+                  <option key={i} value={type}>{type} Bed</option>
                 ))}
               </select>
             </div>
@@ -582,7 +566,7 @@ export default function LotteryPage() {
               >
                 <option value="">— select area —</option>
                 {availableAreas.map((a, i) => (
-                  <option key={i} value={a}>{a}</option>
+                  <option key={i} value={a}>{a} m²</option>
                 ))}
               </select>
             </div>
@@ -594,6 +578,10 @@ export default function LotteryPage() {
               <div className="mt-2 text-sm text-slate-500">
                 Choose site, bed type, and area to preview the draw.
               </div>
+            ) : preview.appCount === 0 ? (
+              <div className="mt-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                ⚠️ There is no applicant for this house detail.
+              </div>
             ) : (
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <Stat label="Houses" value={preview.houseCount} tone="brand" />
@@ -603,12 +591,6 @@ export default function LotteryPage() {
               </div>
             )}
           </div>
-
-          {isAlreadyDrawn && (
-            <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
-              ⚠️ A lottery has <strong>already been drawn</strong> for this combination.
-            </div>
-          )}
 
           {err && (
             <div className="mt-4 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
@@ -643,7 +625,7 @@ export default function LotteryPage() {
             <button
               className="btn-primary"
               disabled={
-                drawing || !siteId || !bedType || !totalArea || isAlreadyDrawn || !preview || preview.houseCount === 0 || preview.appCount === 0
+                drawing || !siteId || !bedType || !totalArea || !preview || preview.houseCount === 0 || preview.appCount === 0
               }
               onClick={() => setConfirmOpen(true)}
             >

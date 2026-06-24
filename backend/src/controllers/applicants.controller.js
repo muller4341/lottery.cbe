@@ -221,7 +221,6 @@ exports.upload = async (req, res) => {
     }
 
     const created = [];
-    const updated = [];
     const errors = [];
 
     for (let i = 0; i < rows.length; i++) {
@@ -232,16 +231,18 @@ exports.upload = async (req, res) => {
       const bedroomInput = pick(r, 'bedroom', 'bedroomNumber');
       const area = String(pick(r, 'area') || '').trim();
 
+      const currentRow = i + 2; // Excel headers occupy row 1, data streams from row 2
+
       if (!idCode) { 
-        errors.push({ row: i + 2, error: 'Missing Identity/Employee Code' }); 
+        errors.push({ row: currentRow, error: 'Missing Identity/Employee Code' }); 
         continue; 
       }
       if (!site) {
-        errors.push({ row: i + 2, error: 'Missing Site choice' });
+        errors.push({ row: currentRow, error: 'Missing Site choice' });
         continue;
       }
       if (!area) {
-        errors.push({ row: i + 2, error: 'Missing Area preference' });
+        errors.push({ row: currentRow, error: 'Missing Area preference' });
         continue;
       }
 
@@ -255,15 +256,20 @@ exports.upload = async (req, res) => {
 
       try {
         const existing = await prisma.applicant.findUnique({ where: { idCode } });
+        
         if (existing) {
-          const u = await prisma.applicant.update({ where: { idCode }, data });
-          updated.push(u);
-        } else {
-          const c = await prisma.applicant.create({ data });
-          created.push(c);
+          // Changed functionality: Track unique ID collision as a dedicated error
+          errors.push({ 
+            row: currentRow, 
+            error: `The employee ID '${idCode}' at this row already exists` 
+          });
+          continue;
         }
+
+        const c = await prisma.applicant.create({ data });
+        created.push(c);
       } catch (dbErr) {
-        errors.push({ row: i + 2, error: dbErr.message || 'Database write failed' });
+        errors.push({ row: currentRow, error: dbErr.message || 'Database write failed' });
       }
     }
 
@@ -271,9 +277,9 @@ exports.upload = async (req, res) => {
 
     return res.json({
       ok: true,
-      message: `Imported ${created.length} new, updated ${updated.length}${errors.length ? `, ${errors.length} errors` : ''}`,
+      message: `Imported ${created.length} new applicants${errors.length ? `, ${errors.length} errors encountered` : ''}`,
       createdCount: created.length,
-      updatedCount: updated.length,
+      updatedCount: 0, // No longer updating duplicate values
       errorCount: errors.length,
       errors: errors.slice(0, 50),
     });
