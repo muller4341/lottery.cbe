@@ -392,7 +392,6 @@ export default function LotteryPage() {
   useEffect(() => {
     (async () => {
       try {
-        // Fixed destructuring to map perfectly with unallocated data arrays
         const [s, unallocatedHousesRes, ag, lr] = await Promise.all([
           api.get('/houses/sites'),
           api.get('/lottery/unallocated-summary'),
@@ -431,20 +430,34 @@ export default function LotteryPage() {
     return [...new Set(filtered.map((g) => g.area))].sort((a, b) => parseFloat(a) - parseFloat(b));
   }, [siteId, bedType, houseGroups]);
 
+  // Track historically drawn keys to identify how many applicants have already been locked into a result status
+  const drawnKeys = useMemo(() => {
+    return new Set(lotteries.map((l) => `${l.site}|${l.bedroom}|${l.area}`));
+  }, [lotteries]);
+
   const preview = useMemo(() => {
     if (!siteId || !bedType || !totalArea) return null;
+    
     const houses = houseGroups.find(
       (g) => g.site === siteId && String(g.bedroom) === bedType && g.area === totalArea
     );
     const applicants = applicantGroups.find(
       (g) => g.site === siteId && String(g.bedroom) === bedType && g.area === totalArea
     );
+
     const houseCount = houses?.count || 0;
-    const appCount = applicants?.count || 0;
+    let appCount = applicants?.count || 0;
+
+    // Fixed: If a lottery was already drawn for this exact criteria combination, 
+    // the remaining available unallocated applicant pool count becomes 0 because they are no longer "NONE"
+    if (drawnKeys.has(`${siteId}|${bedType}|${totalArea}`)) {
+      appCount = 0;
+    }
+
     const winners = Math.min(houseCount, appCount);
     const waitlist = Math.max(0, appCount - houseCount);
     return { houseCount, appCount, winners, waitlist };
-  }, [siteId, bedType, totalArea, houseGroups, applicantGroups]);
+  }, [siteId, bedType, totalArea, houseGroups, applicantGroups, drawnKeys]);
 
   async function runDraw() {
     setErr(''); setSummary(null); setDrawing(true);
@@ -457,7 +470,9 @@ export default function LotteryPage() {
         params: { site: siteId, bedroom: Number(bedType), area: totalArea },
       });
       const allApplicants = applicantsRes.data.applicants || [];
-      setDrawApplicants(allApplicants);
+      // Only stream applicants whose current structural state status remains 'NONE' to the UI animation player
+      const validNoneApplicants = allApplicants.filter(a => !a.status || a.status === 'NONE');
+      setDrawApplicants(validNoneApplicants);
 
       const { data } = await api.post('/lottery/draw', {
         site: siteId,
@@ -481,7 +496,6 @@ export default function LotteryPage() {
       setDrawSummary(data);
       setSummary(data);
 
-      // Fixed: Refresh unallocated pools immediately after a draw completes
       const [unallocatedHousesRes, ag, lr] = await Promise.all([
         api.get('/lottery/unallocated-summary'),
         api.get('/applicants/summary'),
@@ -491,7 +505,6 @@ export default function LotteryPage() {
       setApplicantGroups(ag.data.groups || []);
       setLotteries(lr.data.lotteries || []);
 
-      // Clear selections since this specific combo is now allocated out of options
       setSiteId(''); setBedType(''); setTotalArea('');
 
     } catch (e) {
