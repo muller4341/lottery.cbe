@@ -15,20 +15,7 @@ export default function LoginPage() {
     return null;
   }
 
-  // async function submit(e) {
-  //   e.preventDefault();
-  //   setErr("");
-  //   setBusy(true);
-  //   try {
-  //     const data = await login(username.trim(), password);
-  //     if (!data.ok) setErr(data.message || "Login failed");
-  //     else nav("/", { replace: true });
-  //   } catch (e) {
-  //     setErr(e?.response?.data?.message || "Login failed");
-  //   } finally {
-  //     setBusy(false);
-  //   }
-  // }
+  
 async function submit(e) {
   e.preventDefault();
   setErr("");
