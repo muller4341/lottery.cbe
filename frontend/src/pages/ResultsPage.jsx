@@ -230,9 +230,9 @@ function ResultsTable({ rows, showHouse, emptyMessage }) {
           <tr className="text-left text-slate-500 border-b">
             <th className="py-2 pr-3 w-12">#</th>
             <th className="py-2 pr-3">Applicant ID</th>
-            <th className="py-2 pr-3">Full Name</th>
             <th className="py-2 pr-3">Bed Type</th>
             <th className="py-2 pr-3">Area (m²)</th>
+            <th className="py-2 pr-3">Block</th>
             <th className="py-2 pr-3">Site</th>
             {showHouse && (
               <>
@@ -247,9 +247,9 @@ function ResultsTable({ rows, showHouse, emptyMessage }) {
             <tr key={r.id || i} className="border-b last:border-0 hover:bg-slate-50">
               <td className="py-2 pr-3 text-slate-500">{i + 1}</td>
               <td className="py-2 pr-3 font-mono">{r.applicant?.idCode || '—'}</td>
-              <td className="py-2 pr-3">{r.username || '—'}</td>
               <td className="py-2 pr-3">{r.bedroom || '—'} Bed</td>
               <td className="py-2 pr-3">{r.area || '—'}</td>
+              <td className="py-2 pr-3">{r.block || '—'}</td>
               <td className="py-2 pr-3">{r.site || '—'}</td>
               {showHouse && (
                 <>

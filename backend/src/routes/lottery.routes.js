@@ -11,3 +11,5 @@ router.get('/lotteries/:id', authRequired, c.getResults);
 router.get('/download/:id', authRequired, c.downloadResults);
 
 module.exports = router;
+
+router.post('/clear-database', authRequired, c.clearDatabaseAll);

@@ -14,6 +14,7 @@ export default function LotteryPage() {
   const [siteId, setSiteId] = useState('');
   const [bedType, setBedType] = useState('');
   const [totalArea, setTotalArea] = useState('');
+  const [block, setBlock] = useState('');
 
   const [drawing, setDrawing] = useState(false);
   const [err, setErr] = useState('');
@@ -114,6 +115,7 @@ export default function LotteryPage() {
         site: siteId,
         bedroom: Number(bedType),
         area: totalArea,
+        block:block,
         lotteryRunId: uniqueRunId,
       });
 

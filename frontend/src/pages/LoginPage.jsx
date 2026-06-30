@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { Link } from "react-router-dom";
 
 export default function LoginPage() {
   const { login, admin } = useAuth();
@@ -119,24 +120,23 @@ async function submit(e) {
 
           <form onSubmit={submit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none text-xs">
-                  👤
-                </span>
-                <input
-                  className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#95298E] focus:ring-4 focus:ring-[#95298E]/5 transition-all duration-200"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin_username"
-                  autoFocus
-                  required
-                />
-              </div>
-            </div>
-
+  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+    Username or Email
+  </label>
+  <div className="relative">
+    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none text-xs">
+      👤
+    </span>
+    <input
+      className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#95298E] focus:ring-4 focus:ring-[#95298E]/5 transition-all duration-200"
+      value={username}
+      onChange={(e) => setUsername(e.target.value)}
+      placeholder="admin@cbe.com.et or username"
+      autoFocus
+      required
+    />
+  </div>
+</div>
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                 Password
@@ -178,6 +178,21 @@ async function submit(e) {
               )}
             </button>
           </form>
+          {/* Add these lines right under your </form> tag inside LoginPage.jsx */}
+            <div className="flex flex-col space-y-2 mt-5 text-center text-xs text-slate-500 font-medium">
+              <p>
+                Forgot your credentials?{" "}
+                <Link to="/forgot-password" style={{ color: '#95298E' }} className="font-bold hover:underline">
+                  Reset Password
+                </Link>
+              </p>
+              <p>
+                Need access?{" "}
+                <Link to="/signup" style={{ color: '#95298E' }} className="font-bold hover:underline">
+                  Create Account
+                </Link>
+              </p>
+            </div>
         </div>
       </div>
 

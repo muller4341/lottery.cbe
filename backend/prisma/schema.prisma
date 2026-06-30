@@ -8,16 +8,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ====================== AUTH ======================
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  email     String   @unique
-  password  String
-  fullName  String
-  role      Role     @default(ADMIN)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String    @id @default(uuid())
+  username        String    @unique
+  email           String    @unique
+  password        String
+  fullName        String
+  role            Role      @default(ADMIN)
+  
+  // New verification parameters fields
+  resetToken      String?   @unique
+  resetTokenExpiry DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@map("users")
 }

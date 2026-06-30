@@ -223,7 +223,6 @@ export default function ApplicantsPage() {
               <thead>
                 <tr className="text-left text-slate-500 border-b">
                   <th className="py-2 pr-3">Applicant ID</th>
-                  <th className="py-2 pr-3">Full Name</th>
                   <th className="py-2 pr-3">Site</th>
                   <th className="py-2 pr-3">Bed Type</th>
                   <th className="py-2 pr-3">Area (m²)</th>
@@ -233,7 +232,6 @@ export default function ApplicantsPage() {
                 {applicants.map((a) => (
                   <tr key={a.id} className="border-b last:border-0 hover:bg-slate-50">
                     <td className="py-2 pr-3 font-mono">{a.idCode}</td>
-                    <td className="py-2 pr-3">{a.username || '—'}</td>
                     <td className="py-2 pr-3">{a.site}</td>
                     <td className="py-2 pr-3"><span className="badge-blue">{a.bedroom} bed</span></td>
                     <td className="py-2 pr-3">{a.area}</td>

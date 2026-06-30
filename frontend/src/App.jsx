@@ -7,6 +7,8 @@ import ApplicantsPage from './pages/ApplicantsPage.jsx';
 import LotteryPage from './pages/LotteryPage.jsx';
 import ResultsPage from './pages/ResultsPage.jsx';
 import AppLayout from './layouts/AppLayout.jsx';
+import SignupPage from './pages/SignupPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 
 function ProtectedRoute({ children }) {
   const { admin } = useAuth();
@@ -33,6 +35,8 @@ export default function App() {
         <Route path="results" element={<ResultsPage />} />
         <Route path="results/:id" element={<ResultsPage />} />
       </Route>
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

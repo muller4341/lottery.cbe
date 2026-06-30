@@ -213,14 +213,14 @@ export default function SpinningCardAnimation({
 
       <div className="w-full max-w-5xl mx-4 p-4 relative flex flex-col items-center text-center text-slate-800 max-h-screen overflow-y-auto">
         
-        {phase !== 'revealed' && (
+        {/* {phase !== 'revealed' && (
           <button
             onClick={handleSkip}
             className="absolute top-0 right-4 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 bg-slate-100 hover:bg-slate-200/80 border border-slate-200 rounded-xl transition-all z-[60]"
           >
             Skip Animation ⏭
           </button>
-        )}
+        )} */}
 
         <div className="space-y-1 mb-6">
           <span className="text-xs font-black text-[#95298E] uppercase tracking-[0.3em] block animate-pulse">

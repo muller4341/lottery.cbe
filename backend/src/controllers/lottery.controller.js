@@ -319,3 +319,18 @@ exports.getUnallocatedSummary = async (req, res) => {
     return res.status(500).json({ ok: false, message: 'Failed to look up unallocated pools' });
   }
 };
+exports.clearDatabaseAll = async (req, res) => {
+  try {
+    // Delete in explicit sequential order to respect database relational foreign key constraints
+    await prisma.$transaction([
+      prisma.lotteryResult.deleteMany(),
+      prisma.applicant.deleteMany(),
+      prisma.house.deleteMany(),
+    ]);
+
+    return res.json({ ok: true, message: 'Database wiped clean successfully. Ready for fresh imports.' });
+  } catch (err) {
+    console.error('System database truncation error:', err);
+    return res.status(500).json({ ok: false, message: 'Wipe request failed' });
+  }
+};
