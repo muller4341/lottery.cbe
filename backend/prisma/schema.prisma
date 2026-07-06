@@ -33,8 +33,14 @@ model House {
   block        String?
   floor        Int
   site         String
+  subcity      String
   bedroom      Int?
+  netarea       String
+  proportionalarea       String
+  commonarea       String
+  totalarea       String
   area         String
+
   status       HouseStatus @default(NONE)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -65,25 +71,33 @@ model Applicant {
 
 // ====================== LOTTERY ======================
 model LotteryResult {
-  id           String   @id @default(uuid())
-  lotteryRunId String
-  username     String
-  site         String
-  area         String
-  bedroom      Int
-  floor        Int?
-  houseNumber  String?
-  status       String   // "WINNER" or "WAITLIST"
-  drawDate     DateTime @default(now())
+  id               String   @id @default(uuid())
+  lotteryRunId     String
+  username         String
+  site             String
+  subcity          String?  // ← Added field
+  area             String
+  bedroom          Int
+  floor            Int?
+  block            String?  // ← Added field
+  houseNumber      String?
+  
+  // New granular area parameters matching modified house specifications
+  netarea          String?  // ← Added field
+  proportionalarea String?  // ← Added field
+  commonarea       String?  // ← Added field
+  totalarea        String?  // ← Added field
 
-  houseId      String?
-  house        House?   @relation(fields: [houseId], references: [id])
-  applicantId  String
-  applicant    Applicant @relation(fields: [applicantId], references: [id])
+  status           String   // "WINNER" or "WAITLIST"
+  drawDate         DateTime @default(now())
+
+  houseId          String?
+  house            House?   @relation(fields: [houseId], references: [id])
+  applicantId      String
+  applicant        Applicant @relation(fields: [applicantId], references: [id])
 
   @@map("lottery_results")
 }
-
 enum Role {
   ADMIN
   USER

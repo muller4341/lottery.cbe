@@ -25,7 +25,7 @@ export default function AppLayout() {
               className="h-10 w-10 object-contain rounded-xl"
             />
             <div className="min-w-0">
-              <div className="font-bold text-slate-900 text-xs tracking-tight leading-tight whitespace-nowrap">
+              <div className="font-bold text-gold-600 text-xs tracking-tight leading-tight whitespace-nowrap">
                 Commercial Bank of Ethiopia
               </div>
               <div className="text-[10px] text-gold-600 font-bold tracking-wide mt-0.5 whitespace-nowrap text-center">
@@ -44,7 +44,7 @@ export default function AppLayout() {
                 `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-brand-50 text-brand-700"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    : "text-slate-200 hover:bg-slate-100 hover:text-slate-900"
                 }`
               }
             >

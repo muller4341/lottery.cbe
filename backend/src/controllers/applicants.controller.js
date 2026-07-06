@@ -170,6 +170,7 @@ function normalizeKey(k) {
   return String(k || '').trim().toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
 }
 
+// Map incoming Excel column variations to database fields
 const HEADER_MAP = {
   employeeid: 'idCode',
   empid: 'idCode',
@@ -183,6 +184,9 @@ const HEADER_MAP = {
   bedtype: 'bedroom',
   bedroom: 'bedroom',
   type: 'bedroom',
+  
+  // FIXED: Maps Excel header "house area" (normalized to "housearea") directly to the DB field "area"
+  housearea: 'area', 
   area: 'area',
   totalarea: 'area',
   size: 'area',
@@ -229,9 +233,11 @@ exports.upload = async (req, res) => {
       const username = String(pick(r, 'username', 'fullName') || '').trim() || 'Unknown';
       const site = String(pick(r, 'site') || '').trim();
       const bedroomInput = pick(r, 'bedroom', 'bedroomNumber');
+      
+      // FIXED: Safely pulls down the resolved canonical field "area" directly
       const area = String(pick(r, 'area') || '').trim();
 
-      const currentRow = i + 2; // Excel headers occupy row 1, data streams from row 2
+      const currentRow = i + 2; 
 
       if (!idCode) { 
         errors.push({ row: currentRow, error: 'Missing Identity/Employee Code' }); 
@@ -252,13 +258,13 @@ exports.upload = async (req, res) => {
         if (!isNaN(parsed)) bedroom = parsed;
       }
 
+      // The key aligns seamlessly with your schema property: area
       const data = { idCode, username, site, area, bedroom };
 
       try {
         const existing = await prisma.applicant.findUnique({ where: { idCode } });
         
         if (existing) {
-          // Changed functionality: Track unique ID collision as a dedicated error
           errors.push({ 
             row: currentRow, 
             error: `The employee ID '${idCode}' at this row already exists` 
@@ -279,7 +285,7 @@ exports.upload = async (req, res) => {
       ok: true,
       message: `Imported ${created.length} new applicants${errors.length ? `, ${errors.length} errors encountered` : ''}`,
       createdCount: created.length,
-      updatedCount: 0, // No longer updating duplicate values
+      updatedCount: 0, 
       errorCount: errors.length,
       errors: errors.slice(0, 50),
     });
@@ -289,6 +295,7 @@ exports.upload = async (req, res) => {
   }
 };
 
+// Keeping remainder methods identical to match current configurations
 exports.list = async (req, res) => {
   try {
     const { site, bedroom, area } = req.query;

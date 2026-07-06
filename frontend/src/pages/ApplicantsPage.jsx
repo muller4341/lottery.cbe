@@ -100,7 +100,7 @@ export default function ApplicantsPage() {
 
   function downloadTemplate() {
     const csv =
-      'employeeId,fullName,site,bedroom,area\n' +
+      'employeeId,fullName,site,bedroom,housearea\n' +
       'EMP001,Abebe Kebede,German,1,74.5\n' +
       'EMP002,Sara Tesfa,Girar,2,43.6\n' +
       'EMP003,Daniel Mekonnen,Ayer-tena,3,54.6\n';
@@ -135,7 +135,7 @@ export default function ApplicantsPage() {
           </button>
         </form>
         <p className="mt-2 text-xs text-slate-500">
-          Expected columns: <code className="font-mono">employeeId, fullName, site, bedroom, area</code>.
+          Expected columns: <code className="font-mono">employeeId, fullName, site, bedroom, housearea</code>.
           Each employee can apply only once — re-uploading an employee ID updates their preference.
         </p>
 
@@ -225,7 +225,7 @@ export default function ApplicantsPage() {
                   <th className="py-2 pr-3">Applicant ID</th>
                   <th className="py-2 pr-3">Site</th>
                   <th className="py-2 pr-3">Bed Type</th>
-                  <th className="py-2 pr-3">Area (m²)</th>
+                  <th className="py-2 pr-3"> House Area (m²)</th>
                 </tr>
               </thead>
               <tbody>
