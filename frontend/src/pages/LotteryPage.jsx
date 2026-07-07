@@ -1,4 +1,3 @@
-
 // import { useEffect, useMemo, useState, useRef } from 'react';
 // import { useNavigate } from 'react-router-dom';
 // import api from '../api/client';
@@ -74,7 +73,7 @@
 
 //   const preview = useMemo(() => {
 //     if (!siteId || !bedType || !totalArea) return null;
-    
+
 //     const houses = houseGroups.find(
 //       (g) => g.site === siteId && String(g.bedroom) === bedType && g.area === totalArea
 //     );
@@ -85,7 +84,7 @@
 //     const houseCount = houses?.count || 0;
 //     let appCount = applicants?.count || 0;
 
-//     // Fixed: If a lottery was already drawn for this exact criteria combination, 
+//     // Fixed: If a lottery was already drawn for this exact criteria combination,
 //     // the remaining available unallocated applicant pool count becomes 0 because they are no longer "NONE"
 //     if (drawnKeys.has(`${siteId}|${bedType}|${totalArea}`)) {
 //       appCount = 0;
@@ -379,10 +378,10 @@
 //   );
 // }
 // function Row({ k, v }) { return <div className="flex items-center justify-between border-b border-slate-100 pb-1"><dt className="text-slate-500">{k}</dt><dd className="font-medium text-slate-800">{v}</dd></div>; }
-import { useEffect, useMemo, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../api/client';
-import SpinningCardAnimation from '../components/SpinningCardAnimation';
+import { useEffect, useMemo, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api/client";
+import SpinningCardAnimation from "../components/SpinningCardAnimation";
 
 export default function LotteryPage() {
   const nav = useNavigate();
@@ -391,13 +390,13 @@ export default function LotteryPage() {
   const [applicantGroups, setApplicantGroups] = useState([]);
   const [lotteries, setLotteries] = useState([]);
 
-  const [siteId, setSiteId] = useState('');
-  const [bedType, setBedType] = useState('');
-  const [totalArea, setTotalArea] = useState('');
-  const [block, setBlock] = useState('');
+  const [siteId, setSiteId] = useState("");
+  const [bedType, setBedType] = useState("");
+  const [totalArea, setTotalArea] = useState("");
+  const [block, setBlock] = useState("");
 
   const [drawing, setDrawing] = useState(false);
-  const [err, setErr] = useState('');
+  const [err, setErr] = useState("");
   const [summary, setSummary] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -413,10 +412,10 @@ export default function LotteryPage() {
     (async () => {
       try {
         const [s, unallocatedHousesRes, ag, lr] = await Promise.all([
-          api.get('/houses/sites'),
-          api.get('/lottery/unallocated-summary'),
-          api.get('/applicants/summary'),
-          api.get('/lottery/lotteries'),
+          api.get("/houses/sites"),
+          api.get("/lottery/unallocated-summary"),
+          api.get("/applicants/summary"),
+          api.get("/lottery/lotteries"),
         ]);
         setSites(s.data.sites || []);
         setHouseGroups(unallocatedHousesRes.data.groups || []);
@@ -434,11 +433,11 @@ export default function LotteryPage() {
       setRawApplicantsForCombo([]);
       return;
     }
-    
+
     (async () => {
       setLoadingApplicants(true);
       try {
-        const { data } = await api.get('/applicants', {
+        const { data } = await api.get("/applicants", {
           params: { site: siteId, bedroom: Number(bedType), area: totalArea },
         });
         setRawApplicantsForCombo(data.applicants || []);
@@ -451,31 +450,37 @@ export default function LotteryPage() {
   }, [siteId, bedType, totalArea]);
 
   const availableSites = useMemo(() => {
-    const activeSites = new Set(houseGroups.filter((g) => g.count > 0).map((g) => g.site));
+    const activeSites = new Set(
+      houseGroups.filter((g) => g.count > 0).map((g) => g.site),
+    );
     return sites.filter((s) => activeSites.has(s));
   }, [sites, houseGroups]);
 
   const availableBedTypes = useMemo(() => {
     if (!siteId) return [];
-    const filtered = houseGroups.filter((g) => g.site === siteId && g.count > 0);
+    const filtered = houseGroups.filter(
+      (g) => g.site === siteId && g.count > 0,
+    );
     return [...new Set(filtered.map((g) => String(g.bedroom)))];
   }, [siteId, houseGroups]);
 
   const availableAreas = useMemo(() => {
     if (!siteId || !bedType) return [];
     const filtered = houseGroups.filter(
-      (g) => g.site === siteId && String(g.bedroom) === bedType && g.count > 0
+      (g) => g.site === siteId && String(g.bedroom) === bedType && g.count > 0,
     );
-    return [...new Set(filtered.map((g) => String(g.area).trim()))].sort((a, b) => parseFloat(a) - parseFloat(b));
+    return [...new Set(filtered.map((g) => String(g.area).trim()))].sort(
+      (a, b) => parseFloat(a) - parseFloat(b),
+    );
   }, [siteId, bedType, houseGroups]);
 
   // FIXED STRICTLY HERE: Using l.area exclusively instead of totalarea
   const drawnKeys = useMemo(() => {
     return new Set(
       lotteries.map((l) => {
-        const areaStr = String(l.area || '').trim();
+        const areaStr = String(l.area || "").trim();
         return `${String(l.site).trim()}|${Number(l.bedroom)}|${areaStr}`;
-      })
+      }),
     );
   }, [lotteries]);
 
@@ -487,15 +492,20 @@ export default function LotteryPage() {
 
   const preview = useMemo(() => {
     if (!siteId || !bedType || !totalArea) return null;
-    
+
     const houses = houseGroups.find(
-      (g) => g.site === siteId && String(g.bedroom) === bedType && String(g.area).trim() === String(totalArea).trim()
+      (g) =>
+        g.site === siteId &&
+        String(g.bedroom) === bedType &&
+        String(g.area).trim() === String(totalArea).trim(),
     );
 
     const houseCount = houses?.count || 0;
-    
+
     // Count ONLY applicants who are fresh ('NONE' or undefined status attributes)
-    const validFreshApplicants = rawApplicantsForCombo.filter(a => !a.status || a.status === 'NONE');
+    const validFreshApplicants = rawApplicantsForCombo.filter(
+      (a) => !a.status || a.status === "NONE",
+    );
     let appCount = validFreshApplicants.length;
 
     if (isAlreadyDrawn) {
@@ -505,23 +515,37 @@ export default function LotteryPage() {
     const winners = Math.min(houseCount, appCount);
     const waitlist = Math.max(0, appCount - houseCount);
     return { houseCount, appCount, winners, waitlist };
-  }, [siteId, bedType, totalArea, houseGroups, rawApplicantsForCombo, isAlreadyDrawn]);
+  }, [
+    siteId,
+    bedType,
+    totalArea,
+    houseGroups,
+    rawApplicantsForCombo,
+    isAlreadyDrawn,
+  ]);
 
   useEffect(() => {
-    setErr('');
+    setErr("");
   }, [siteId, bedType, totalArea]);
 
   async function runDraw() {
-    setErr(''); setSummary(null); setDrawing(true);
-    setDrawSummary(null); setDrawWinners([]); setDrawApplicants([]); setDrawResults([]);
+    setErr("");
+    setSummary(null);
+    setDrawing(true);
+    setDrawSummary(null);
+    setDrawWinners([]);
+    setDrawApplicants([]);
+    setDrawResults([]);
 
     const uniqueRunId = `RUN-${Date.now()}`;
 
     try {
-      const validNoneApplicants = rawApplicantsForCombo.filter(a => !a.status || a.status === 'NONE');
+      const validNoneApplicants = rawApplicantsForCombo.filter(
+        (a) => !a.status || a.status === "NONE",
+      );
       setDrawApplicants(validNoneApplicants);
 
-      const { data } = await api.post('/lottery/draw', {
+      const { data } = await api.post("/lottery/draw", {
         site: siteId,
         bedroom: Number(bedType),
         area: totalArea,
@@ -530,14 +554,15 @@ export default function LotteryPage() {
       });
 
       if (!data.ok) {
-        setErr(data.message || 'Draw failed');
-        setDrawing(false); setConfirmOpen(false);
+        setErr(data.message || "Draw failed");
+        setDrawing(false);
+        setConfirmOpen(false);
         return;
       }
 
       const resultsRes = await api.get(`/lottery/lotteries/${uniqueRunId}`);
       const results = resultsRes.data.results || [];
-      const winners = results.filter((r) => r.status === 'WINNER');
+      const winners = results.filter((r) => r.status === "WINNER");
 
       setDrawResults(results);
       setDrawWinners(winners);
@@ -545,19 +570,20 @@ export default function LotteryPage() {
       setSummary(data);
 
       const [unallocatedHousesRes, ag, lr] = await Promise.all([
-        api.get('/lottery/unallocated-summary'),
-        api.get('/applicants/summary'),
-        api.get('/lottery/lotteries'),
+        api.get("/lottery/unallocated-summary"),
+        api.get("/applicants/summary"),
+        api.get("/lottery/lotteries"),
       ]);
       setHouseGroups(unallocatedHousesRes.data.groups || []);
       setApplicantGroups(ag.data.groups || []);
       setLotteries(lr.data.lotteries || []);
 
-      setSiteId(''); setBedType(''); setTotalArea('');
-
+      setSiteId("");
+      setBedType("");
+      setTotalArea("");
     } catch (e) {
       console.error(e);
-      setErr(e?.response?.data?.message || e.message || 'Draw failed');
+      setErr(e?.response?.data?.message || e.message || "Draw failed");
       setDrawing(false);
     } finally {
       setConfirmOpen(false);
@@ -582,7 +608,8 @@ export default function LotteryPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Lottery Draw</h1>
         <p className="text-sm text-slate-500">
-          Pick a single combination and draw the lottery. Only unallocated houses are listed.
+          Pick a single combination and draw the lottery. Only unallocated
+          houses are listed.
         </p>
       </div>
 
@@ -595,11 +622,17 @@ export default function LotteryPage() {
               <select
                 className="input"
                 value={siteId}
-                onChange={(e) => { setSiteId(e.target.value); setBedType(''); setTotalArea(''); }}
+                onChange={(e) => {
+                  setSiteId(e.target.value);
+                  setBedType("");
+                  setTotalArea("");
+                }}
               >
                 <option value="">— select site —</option>
                 {availableSites.map((s, i) => (
-                  <option key={i} value={s}>{s}</option>
+                  <option key={i} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             </div>
@@ -608,12 +641,17 @@ export default function LotteryPage() {
               <select
                 className="input"
                 value={bedType}
-                onChange={(e) => { setBedType(e.target.value); setTotalArea(''); }}
+                onChange={(e) => {
+                  setBedType(e.target.value);
+                  setTotalArea("");
+                }}
                 disabled={!siteId}
               >
                 <option value="">— select bed —</option>
                 {availableBedTypes.map((type, i) => (
-                  <option key={i} value={type}>{type} Bed</option>
+                  <option key={i} value={type}>
+                    {type} Bed
+                  </option>
                 ))}
               </select>
             </div>
@@ -627,15 +665,19 @@ export default function LotteryPage() {
               >
                 <option value="">— select area —</option>
                 {availableAreas.map((a, i) => (
-                  <option key={i} value={a}>{a} m²</option>
+                  <option key={i} value={a}>
+                    {a} m²
+                  </option>
                 ))}
               </select>
             </div>
           </div>
 
           <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Live scope</h3>
-            
+            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+              Live scope
+            </h3>
+
             {loadingApplicants ? (
               <div className="mt-2 text-sm text-slate-500 flex items-center gap-2">
                 <span className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
@@ -643,7 +685,8 @@ export default function LotteryPage() {
               </div>
             ) : isAlreadyDrawn ? (
               <div className="mt-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 animate-pulse">
-                ⚠️ A house lottery has already been drawn and finalized for this combination.
+                ⚠️ A house lottery has already been drawn and finalized for this
+                combination.
               </div>
             ) : !preview ? (
               <div className="mt-2 text-sm text-slate-500">
@@ -656,9 +699,21 @@ export default function LotteryPage() {
             ) : (
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <Stat label="Houses" value={preview.houseCount} tone="brand" />
-                <Stat label="Applicants" value={preview.appCount} tone="slate" />
-                <Stat label="Expected winners" value={preview.winners} tone="emerald" />
-                <Stat label="Expected waitlist" value={preview.waitlist} tone={preview.waitlist > 0 ? 'amber' : 'slate'} />
+                <Stat
+                  label="Applicants"
+                  value={preview.appCount}
+                  tone="slate"
+                />
+                <Stat
+                  label="Expected winners"
+                  value={preview.winners}
+                  tone="emerald"
+                />
+                <Stat
+                  label="Expected waitlist"
+                  value={preview.waitlist}
+                  tone={preview.waitlist > 0 ? "amber" : "slate"}
+                />
               </div>
             )}
           </div>
@@ -673,8 +728,9 @@ export default function LotteryPage() {
             <div className="mt-4 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
               <div className="font-semibold">Lottery drawn successfully!</div>
               <div className="mt-1">
-                {summary.summary.siteName} · {summary.summary.bedType} · {summary.summary.totalArea}m² —{' '}
-                {summary.summary.winnersCount} winners, {summary.summary.waitlistCount} waitlist.
+                {summary.summary.siteName} · {summary.summary.bedType} ·{" "}
+                {summary.summary.totalArea}m² — {summary.summary.winnersCount}{" "}
+                winners, {summary.summary.waitlistCount} waitlist.
               </div>
               <div className="mt-3 flex gap-2">
                 <button
@@ -686,7 +742,10 @@ export default function LotteryPage() {
                 <button
                   className="btn-secondary"
                   onClick={() => {
-                    setSiteId(''); setBedType(''); setTotalArea(''); setSummary(null);
+                    setSiteId("");
+                    setBedType("");
+                    setTotalArea("");
+                    setSummary(null);
                   }}
                 >
                   Draw another combination
@@ -699,14 +758,14 @@ export default function LotteryPage() {
             <button
               className="btn-primary"
               disabled={
-                drawing || 
+                drawing ||
                 loadingApplicants ||
-                isAlreadyDrawn || 
-                !siteId || 
-                !bedType || 
-                !totalArea || 
-                !preview || 
-                preview.houseCount === 0 || 
+                isAlreadyDrawn ||
+                !siteId ||
+                !bedType ||
+                !totalArea ||
+                !preview ||
+                preview.houseCount === 0 ||
                 preview.appCount === 0
               }
               onClick={() => setConfirmOpen(true)}
@@ -716,7 +775,13 @@ export default function LotteryPage() {
             <button
               type="button"
               className="btn-secondary"
-              onClick={() => { setSiteId(''); setBedType(''); setTotalArea(''); setSummary(null); setErr(''); }}
+              onClick={() => {
+                setSiteId("");
+                setBedType("");
+                setTotalArea("");
+                setSummary(null);
+                setErr("");
+              }}
             >
               Reset
             </button>
@@ -726,11 +791,16 @@ export default function LotteryPage() {
         <div className="card p-5 bg-white border border-slate-200 rounded-3xl shadow-sm">
           <h2 className="font-semibold text-slate-900 mb-3">Drawn lotteries</h2>
           {lotteries.length === 0 ? (
-            <div className="py-8 text-center text-sm text-slate-500">No lotteries drawn yet.</div>
+            <div className="py-8 text-center text-sm text-slate-500">
+              No lotteries drawn yet.
+            </div>
           ) : (
             <ul className="space-y-3">
               {lotteries.map((l, idx) => (
-                <li key={l.id || idx} className="flex items-center justify-between gap-3">
+                <li
+                  key={l.id || idx}
+                  className="flex items-center justify-between gap-3"
+                >
                   <div className="min-w-0">
                     <div className="font-medium text-slate-800 truncate">
                       {l.site} · {l.bedroom} Bed · {l.area}m²
@@ -739,7 +809,10 @@ export default function LotteryPage() {
                       {new Date(l.drawDate).toLocaleString()}
                     </div>
                   </div>
-                  <button className="btn-secondary text-xs" onClick={() => nav(`/results/${l.lotteryRunId}`)}>
+                  <button
+                    className="btn-secondary text-xs"
+                    onClick={() => nav(`/results/${l.lotteryRunId}`)}
+                  >
                     View
                   </button>
                 </li>
@@ -764,36 +837,140 @@ export default function LotteryPage() {
   );
 }
 
-function Stat({ label, value, tone = 'slate' }) {
+function Stat({ label, value, tone = "slate" }) {
   const configs = {
-    slate: { borderColor: '#6366f1', bgLight: 'bg-indigo-50/50', textClass: 'text-indigo-700', bgGradient: 'to-indigo-50/20', icon: UsersIconMini },
-    brand: { borderColor: '#95298E', bgLight: 'bg-brand-50/50', textClass: 'text-brand-700', bgGradient: 'to-brand-50/20', icon: BuildingIconMini },
-    emerald: { borderColor: '#10b981', bgLight: 'bg-emerald-50/50', textClass: 'text-emerald-700', bgGradient: 'to-emerald-50/25', icon: AwardIconMini },
-    amber: { borderColor: '#B38D32', bgLight: 'bg-gold-50/50', textClass: 'text-gold-700', bgGradient: 'to-gold-50/20', icon: WaitlistIconMini },
+    slate: {
+      borderColor: "#6366f1",
+      bgLight: "bg-indigo-50/50",
+      textClass: "text-indigo-700",
+      bgGradient: "to-indigo-50/20",
+      icon: UsersIconMini,
+    },
+    brand: {
+      borderColor: "#95298E",
+      bgLight: "bg-brand-50/50",
+      textClass: "text-brand-700",
+      bgGradient: "to-brand-50/20",
+      icon: BuildingIconMini,
+    },
+    emerald: {
+      borderColor: "#10b981",
+      bgLight: "bg-emerald-50/50",
+      textClass: "text-emerald-700",
+      bgGradient: "to-emerald-50/25",
+      icon: AwardIconMini,
+    },
+    amber: {
+      borderColor: "#B38D32",
+      bgLight: "bg-gold-50/50",
+      textClass: "text-gold-700",
+      bgGradient: "to-gold-50/20",
+      icon: WaitlistIconMini,
+    },
   };
   const c = configs[tone] || configs.slate;
   return (
-    <div className={`rounded-xl border border-slate-200 border-l-4 p-4 flex items-center justify-between bg-gradient-to-br from-white ${c.bgGradient} shadow-sm`} style={{ borderLeftColor: c.borderColor }}>
+    <div
+      className={`rounded-xl border border-slate-200 border-l-4 p-4 flex items-center justify-between bg-gradient-to-br from-white ${c.bgGradient} shadow-sm`}
+      style={{ borderLeftColor: c.borderColor }}
+    >
       <div className="space-y-0.5">
-        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">{label}</div>
-        <div className="text-2xl font-black text-slate-900 tabular-nums">{value}</div>
+        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+          {label}
+        </div>
+        <div className="text-2xl font-black text-slate-900 tabular-nums">
+          {value}
+        </div>
       </div>
-      <div className={`p-2 rounded-lg ${c.bgLight} ${c.textClass} border border-black/5`}><c.icon className="w-4.5 h-4.5" /></div>
+      <div
+        className={`p-2 rounded-lg ${c.bgLight} ${c.textClass} border border-black/5`}
+      >
+<c.icon className="w-5 h-5" />
+      </div>
     </div>
   );
 }
 
-function UsersIconMini(props) { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>; }
-function BuildingIconMini(props) { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M9 9h6M9 13h6M9 17h6" /></svg>; }
-function AwardIconMini(props) { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>; }
-function WaitlistIconMini(props) { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>; }
+function UsersIconMini(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+    </svg>
+  );
+}
+function BuildingIconMini(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M9 9h6M9 13h6M9 17h6" />
+    </svg>
+  );
+}
+function AwardIconMini(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  );
+}
+function WaitlistIconMini(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
 
-function ConfirmDialog({ preview, siteName, bedType, area, onCancel, onConfirm, busy }) {
+function ConfirmDialog({
+  preview,
+  siteName,
+  bedType,
+  area,
+  onCancel,
+  onConfirm,
+  busy,
+}) {
   if (!preview) return null;
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl">
-        <h3 className="text-lg font-semibold text-slate-900">Confirm lottery draw</h3>
+        <h3 className="text-lg font-semibold text-slate-900">
+          Confirm lottery draw
+        </h3>
         <dl className="mt-4 space-y-2 text-sm">
           <Row k="Site" v={siteName} />
           <Row k="Bed type" v={`${bedType} Bed`} />
@@ -802,11 +979,22 @@ function ConfirmDialog({ preview, siteName, bedType, area, onCancel, onConfirm, 
           <Row k="Applicants" v={preview.appCount} />
         </dl>
         <div className="mt-6 flex justify-end gap-2">
-          <button className="btn-secondary" onClick={onCancel} disabled={busy}>Cancel</button>
-          <button className="btn-primary" onClick={onConfirm} disabled={busy}>{busy ? 'Drawing…' : 'Confirm & draw'}</button>
+          <button className="btn-secondary" onClick={onCancel} disabled={busy}>
+            Cancel
+          </button>
+          <button className="btn-primary" onClick={onConfirm} disabled={busy}>
+            {busy ? "Drawing…" : "Confirm & draw"}
+          </button>
         </div>
       </div>
     </div>
   );
 }
-function Row({ k, v }) { return <div className="flex items-center justify-between border-b border-slate-100 pb-1"><dt className="text-slate-500">{k}</dt><dd className="font-medium text-slate-800">{v}</dd></div>; }
+function Row({ k, v }) {
+  return (
+    <div className="flex items-center justify-between border-b border-slate-100 pb-1">
+      <dt className="text-slate-500">{k}</dt>
+      <dd className="font-medium text-slate-800">{v}</dd>
+    </div>
+  );
+}
