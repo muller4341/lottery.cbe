@@ -1,4 +1,3 @@
-
 // import { useEffect, useMemo, useRef, useState } from "react";
 // import api from "../api/client";
 
@@ -8,7 +7,7 @@
 //   const [filterBed, setFilterBed] = useState("");
 //   const [filterArea, setFilterArea] = useState("");
 //   const [filterStatus, setFilterStatus] = useState("");
-  
+
 //   // Pagination states for all houses
 //   const [page, setPage] = useState(1);
 //   const [limit] = useState(20);
@@ -28,7 +27,7 @@
 
 //   async function load() {
 //     const params = { page, limit };
-    
+
 //     if (filterSite) params.site = filterSite;
 //     if (filterBed) params.bedroom = filterBed;
 //     if (filterArea) params.area = filterArea;
@@ -79,7 +78,7 @@
 //     let relevantRows = summary;
 //     if (filterSite) relevantRows = relevantRows.filter(g => g.site === filterSite);
 //     if (filterBed) relevantRows = relevantRows.filter(g => String(g.bedroom) === filterBed);
-    
+
 //     const uniqueAreas = [...new Set(relevantRows.map(g => String(g.area).trim()))];
 //     return uniqueAreas.sort((a, b) => parseFloat(a) - parseFloat(b));
 //   }, [summary, filterSite, filterBed]);
@@ -102,7 +101,7 @@
 //     setResult(null);
 //     const file = fileRef.current?.files?.[0];
 //     if (!file) return setError("Please choose an Excel file");
-    
+
 //     setUploading(true);
 //     try {
 //       const fd = new FormData();
@@ -110,10 +109,10 @@
 //       const { data } = await api.post("/houses/upload", fd, {
 //         headers: { "Content-Type": "multipart/form-data" },
 //       });
-      
+
 //       if (!data.ok) setError(data.message);
 //       else setResult(data);
-      
+
 //       fileRef.current.value = "";
 //       await load();
 //     } catch (err) {
@@ -429,7 +428,6 @@
 //   );
 // }
 
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../api/client";
 
@@ -439,7 +437,7 @@ export default function HousesPage() {
   const [filterBed, setFilterBed] = useState("");
   const [filterArea, setFilterArea] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  
+
   // Pagination states for all houses
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
@@ -459,7 +457,7 @@ export default function HousesPage() {
 
   async function load() {
     const params = { page, limit };
-    
+
     if (filterSite) params.site = filterSite;
     if (filterBed) params.bedroom = filterBed;
     if (filterArea) params.area = filterArea;
@@ -492,24 +490,33 @@ export default function HousesPage() {
 
   // Load unique sites for filter
   useEffect(() => {
-    api.get("/houses/sites")
+    api
+      .get("/houses/sites")
       .then((r) => setSites(r.data.sites || []))
       .catch(() => setSites([]));
   }, []);
 
   // Dynamic Backend Data Extraction Hooks for Filter Dropdowns
   const dynamicBedTypes = useMemo(() => {
-    const relevantRows = filterSite ? summary.filter(g => g.site === filterSite) : summary;
-    const uniqueBeds = [...new Set(relevantRows.map(g => String(g.bedroom)))];
+    const relevantRows = filterSite
+      ? summary.filter((g) => g.site === filterSite)
+      : summary;
+    const uniqueBeds = [...new Set(relevantRows.map((g) => String(g.bedroom)))];
     return uniqueBeds.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
   }, [summary, filterSite]);
 
   const dynamicAreas = useMemo(() => {
     let relevantRows = summary;
-    if (filterSite) relevantRows = relevantRows.filter(g => g.site === filterSite);
-    if (filterBed) relevantRows = relevantRows.filter(g => String(g.bedroom) === filterBed);
-    
-    const uniqueAreas = [...new Set(relevantRows.map(g => String(g.area).trim()))];
+    if (filterSite)
+      relevantRows = relevantRows.filter((g) => g.site === filterSite);
+    if (filterBed)
+      relevantRows = relevantRows.filter(
+        (g) => String(g.bedroom) === filterBed,
+      );
+
+    const uniqueAreas = [
+      ...new Set(relevantRows.map((g) => String(g.area).trim())),
+    ];
     return uniqueAreas.sort((a, b) => parseFloat(a) - parseFloat(b));
   }, [summary, filterSite, filterBed]);
 
@@ -531,7 +538,7 @@ export default function HousesPage() {
     setResult(null);
     const file = fileRef.current?.files?.[0];
     if (!file) return setError("Please choose an Excel file");
-    
+
     setUploading(true);
     try {
       const fd = new FormData();
@@ -539,10 +546,10 @@ export default function HousesPage() {
       const { data } = await api.post("/houses/upload", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      
+
       if (!data.ok) setError(data.message);
       else setResult(data);
-      
+
       fileRef.current.value = "";
       await load();
     } catch (err) {
@@ -573,7 +580,10 @@ export default function HousesPage() {
   // Slice summary data based on summary pagination state
   const totalSummaryPages = Math.ceil(summary.length / summaryLimit) || 1;
   const summaryOffset = (summaryPage - 1) * summaryLimit;
-  const paginatedSummary = summary.slice(summaryOffset, summaryOffset + summaryLimit);
+  const paginatedSummary = summary.slice(
+    summaryOffset,
+    summaryOffset + summaryLimit,
+  );
 
   return (
     <div className="space-y-6">
@@ -581,7 +591,8 @@ export default function HousesPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Houses</h1>
           <p className="text-sm text-slate-500">
-            Upload the apartment inventory. Each row represents one available house.
+            Upload the apartment houses. Each row represents one available
+            house.
           </p>
         </div>
         <button
@@ -594,30 +605,53 @@ export default function HousesPage() {
 
       {/* Upload Section */}
       <div className="card p-5">
-        <h2 className="font-semibold text-slate-900 mb-3">Upload houses (Excel/CSV)</h2>
-        <form onSubmit={onUpload} className="flex flex-col md:flex-row gap-3 items-stretch md:items-end">
+        <h2 className="font-semibold text-slate-900 mb-3">
+          Upload houses (Excel/CSV)
+        </h2>
+        <form
+          onSubmit={onUpload}
+          className="flex flex-col md:flex-row gap-3 items-stretch md:items-end"
+        >
           <div className="flex-1">
             <label className="label">Excel file (.xlsx)</label>
-            <input ref={fileRef} type="file" accept=".xlsx,.xls" className="input" />
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="input"
+            />
           </div>
-          <button type="submit" className="btn-primary md:w-auto" disabled={uploading}>
+          <button
+            type="submit"
+            className="btn-primary md:w-auto"
+            disabled={uploading}
+          >
             {uploading ? "Uploading…" : "Upload"}
           </button>
         </form>
         <p className="mt-2 text-xs text-slate-500">
           Expected columns (any casing):{" "}
-          <code className="font-mono">site, block, house, floor, bedType, area</code>
-          . Both <code className="font-mono">site</code> and <code className="font-mono">bedType</code> are fully dynamic.
+          <code className="font-mono">
+            site, block, house, floor, bedType, area
+          </code>
+          . Both <code className="font-mono">site</code> and{" "}
+          <code className="font-mono">bedType</code> are fully dynamic.
         </p>
 
-        {error && <div className="mt-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{error}</div>}
+        {error && (
+          <div className="mt-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
         {result && (
           <div className="mt-3 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm text-emerald-700">
             {result.message}
             {result.errors?.length && (
               <ul className="list-disc pl-5 mt-1 text-xs text-emerald-800">
                 {result.errors.slice(0, 10).map((e, i) => (
-                  <li key={i}>Row {e.row}: {e.error}</li>
+                  <li key={i}>
+                    Row {e.row}: {e.error}
+                  </li>
                 ))}
               </ul>
             )}
@@ -629,14 +663,20 @@ export default function HousesPage() {
       <div className="card p-5">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="font-semibold text-slate-900">Inventory by (site, bed type, area)</h2>
+            <h2 className="font-semibold text-slate-900">
+              Houses by (site, bed type, area)
+            </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {summary.length > 0 ? `${summary.length} categories total · Page size: 20` : "No summary view available"}
+              {summary.length > 0
+                ? `${summary.length} categories total · Page size: 20`
+                : "No summary view available"}
             </p>
           </div>
         </div>
         {summary.length === 0 ? (
-          <div className="py-8 text-center text-sm text-slate-500">No houses uploaded yet.</div>
+          <div className="py-8 text-center text-sm text-slate-500">
+            No houses uploaded yet.
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -653,9 +693,13 @@ export default function HousesPage() {
                   {paginatedSummary.map((g, i) => (
                     <tr key={i} className="border-b last:border-0">
                       <td className="py-2 pr-4">{g.site}</td>
-                      <td className="py-2 pr-4"><span className="badge-blue">{g.bedroom} bed</span></td>
+                      <td className="py-2 pr-4">
+                        <span className="badge-blue">{g.bedroom} bed</span>
+                      </td>
                       <td className="py-2 pr-4">{g.area}</td>
-                      <td className="py-2 pr-4 text-right tabular-nums font-medium">{g.count}</td>
+                      <td className="py-2 pr-4 text-right tabular-nums font-medium">
+                        {g.count}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -675,16 +719,35 @@ export default function HousesPage() {
                     {Math.min(summaryPage * summaryLimit, summary.length)}
                   </span>{" "}
                   of{" "}
-                  <span className="font-semibold text-slate-700">{summary.length}</span>{" "}
+                  <span className="font-semibold text-slate-700">
+                    {summary.length}
+                  </span>{" "}
                   categories
                 </span>
 
                 <div className="flex items-center gap-1">
-                  <button className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40" disabled={summaryPage <= 1} onClick={() => setSummaryPage(1)}>«</button>
-                  <button className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40" disabled={summaryPage <= 1} onClick={() => setSummaryPage(summaryPage - 1)}>‹ Prev</button>
+                  <button
+                    className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+                    disabled={summaryPage <= 1}
+                    onClick={() => setSummaryPage(1)}
+                  >
+                    «
+                  </button>
+                  <button
+                    className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+                    disabled={summaryPage <= 1}
+                    onClick={() => setSummaryPage(summaryPage - 1)}
+                  >
+                    ‹ Prev
+                  </button>
 
                   {Array.from({ length: totalSummaryPages }, (_, i) => i + 1)
-                    .filter(p => p === 1 || p === totalSummaryPages || Math.abs(p - summaryPage) <= 2)
+                    .filter(
+                      (p) =>
+                        p === 1 ||
+                        p === totalSummaryPages ||
+                        Math.abs(p - summaryPage) <= 2,
+                    )
                     .reduce((acc, p, idx, arr) => {
                       if (idx > 0 && p - arr[idx - 1] > 1) acc.push("...");
                       acc.push(p);
@@ -692,22 +755,41 @@ export default function HousesPage() {
                     }, [])
                     .map((item, i) =>
                       item === "..." ? (
-                        <span key={`summary-ellipsis-${i}`} className="px-1 text-slate-400">…</span>
+                        <span
+                          key={`summary-ellipsis-${i}`}
+                          className="px-1 text-slate-400"
+                        >
+                          …
+                        </span>
                       ) : (
                         <button
                           key={`summary-page-${item}`}
                           onClick={() => setSummaryPage(item)}
                           className={`py-1.5 px-3 rounded text-xs font-medium transition-colors ${
-                            item === summaryPage ? "bg-[#95298E] text-white shadow-sm" : "btn-secondary"
+                            item === summaryPage
+                              ? "bg-[#95298E] text-white shadow-sm"
+                              : "btn-secondary"
                           }`}
                         >
                           {item}
                         </button>
-                      )
+                      ),
                     )}
 
-                  <button className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40" disabled={summaryPage >= totalSummaryPages} onClick={() => setSummaryPage(summaryPage + 1)}>Next ›</button>
-                  <button className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40" disabled={summaryPage >= totalSummaryPages} onClick={() => setSummaryPage(totalSummaryPages)}>»</button>
+                  <button
+                    className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+                    disabled={summaryPage >= totalSummaryPages}
+                    onClick={() => setSummaryPage(summaryPage + 1)}
+                  >
+                    Next ›
+                  </button>
+                  <button
+                    className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+                    disabled={summaryPage >= totalSummaryPages}
+                    onClick={() => setSummaryPage(totalSummaryPages)}
+                  >
+                    »
+                  </button>
                 </div>
               </div>
             )}
@@ -721,44 +803,83 @@ export default function HousesPage() {
           <div>
             <h2 className="font-semibold text-slate-900">All Houses</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {totalHouses > 0 ? `${totalHouses} houses total · Page size: 20` : "No houses yet"}
+              {totalHouses > 0
+                ? `${totalHouses} houses total · Page size: 20`
+                : "No houses yet"}
             </p>
           </div>
         </div>
 
         {/* Dynamic Dropdown Filters Context */}
         <div className="flex flex-row flex-wrap items-center gap-2 mb-4 pb-4 border-b border-slate-100">
-          <select className="input flex-1 min-w-[130px]" value={filterSite} onChange={(e) => { setFilterSite(e.target.value); setFilterBed(""); setFilterArea(""); }}>
+          <select
+            className="input flex-1 min-w-[130px]"
+            value={filterSite}
+            onChange={(e) => {
+              setFilterSite(e.target.value);
+              setFilterBed("");
+              setFilterArea("");
+            }}
+          >
             <option value="">All sites</option>
             {sites.map((s, i) => (
-              <option key={i} value={s}>{s}</option>
+              <option key={i} value={s}>
+                {s}
+              </option>
             ))}
           </select>
 
-          <select className="input flex-1 min-w-[130px]" value={filterBed} onChange={(e) => { setFilterBed(e.target.value); setFilterArea(""); }} disabled={!filterSite && summary.length === 0}>
+          <select
+            className="input flex-1 min-w-[130px]"
+            value={filterBed}
+            onChange={(e) => {
+              setFilterBed(e.target.value);
+              setFilterArea("");
+            }}
+            disabled={!filterSite && summary.length === 0}
+          >
             <option value="">All bed types</option>
             {dynamicBedTypes.map((type, i) => (
-              <option key={i} value={type}>{type} Bed</option>
+              <option key={i} value={type}>
+                {type} Bed
+              </option>
             ))}
           </select>
 
-          <select className="input flex-1 min-w-[130px]" value={filterArea} onChange={(e) => setFilterArea(e.target.value)} disabled={!filterBed && dynamicAreas.length === 0}>
+          <select
+            className="input flex-1 min-w-[130px]"
+            value={filterArea}
+            onChange={(e) => setFilterArea(e.target.value)}
+            disabled={!filterBed && dynamicAreas.length === 0}
+          >
             <option value="">All areas</option>
             {dynamicAreas.map((a, i) => (
-              <option key={i} value={a}>{a} m²</option>
+              <option key={i} value={a}>
+                {a} m²
+              </option>
             ))}
           </select>
 
-          <select className="input flex-1 min-w-[130px]" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+          <select
+            className="input flex-1 min-w-[130px]"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
             <option value="">All statuses</option>
             <option value="NONE">Available</option>
             <option value="PROVIDED">Allocated</option>
           </select>
 
           {(filterSite || filterBed || filterArea || filterStatus) && (
-            <button className="btn-secondary text-xs px-3 py-2 whitespace-nowrap" onClick={() => {
-              setFilterSite(""); setFilterBed(""); setFilterArea(""); setFilterStatus("");
-            }}>
+            <button
+              className="btn-secondary text-xs px-3 py-2 whitespace-nowrap"
+              onClick={() => {
+                setFilterSite("");
+                setFilterBed("");
+                setFilterArea("");
+                setFilterStatus("");
+              }}
+            >
               Clear filters
             </button>
           )}
@@ -766,7 +887,9 @@ export default function HousesPage() {
 
         {/* Table View */}
         {houses.length === 0 ? (
-          <div className="py-8 text-center text-sm text-slate-500">No houses match the selected filters.</div>
+          <div className="py-8 text-center text-sm text-slate-500">
+            No houses match the selected filters.
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -783,12 +906,17 @@ export default function HousesPage() {
               </thead>
               <tbody>
                 {houses.map((h) => (
-                  <tr key={h.id} className="border-b last:border-0 hover:bg-slate-50">
+                  <tr
+                    key={h.id}
+                    className="border-b last:border-0 hover:bg-slate-50"
+                  >
                     <td className="py-2 pr-3">{h.site}</td>
                     <td className="py-2 pr-3">{h.block}</td>
                     <td className="py-2 pr-3">{h.houseNumber}</td>
                     <td className="py-2 pr-3">{h.floor}</td>
-                    <td className="py-2 pr-3"><span className="badge-blue">{h.bedroom} bed</span></td>
+                    <td className="py-2 pr-3">
+                      <span className="badge-blue">{h.bedroom} bed</span>
+                    </td>
                     <td className="py-2 pr-3">{h.area}</td>
                     <td className="py-2 pr-3">
                       {h.status === "PROVIDED" ? (
@@ -817,16 +945,32 @@ export default function HousesPage() {
                 {Math.min(page * limit, totalHouses)}
               </span>{" "}
               of{" "}
-              <span className="font-semibold text-slate-700">{totalHouses}</span>{" "}
+              <span className="font-semibold text-slate-700">
+                {totalHouses}
+              </span>{" "}
               houses
             </span>
 
             <div className="flex items-center gap-1">
-              <button className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40" disabled={page <= 1} onClick={() => setPage(1)}>«</button>
-              <button className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40" disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Prev</button>
+              <button
+                className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+                disabled={page <= 1}
+                onClick={() => setPage(1)}
+              >
+                «
+              </button>
+              <button
+                className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+              >
+                ‹ Prev
+              </button>
 
               {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+                .filter(
+                  (p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2,
+                )
                 .reduce((acc, p, idx, arr) => {
                   if (idx > 0 && p - arr[idx - 1] > 1) acc.push("...");
                   acc.push(p);
@@ -834,22 +978,38 @@ export default function HousesPage() {
                 }, [])
                 .map((item, i) =>
                   item === "..." ? (
-                    <span key={`ellipsis-${i}`} className="px-1 text-slate-400">…</span>
+                    <span key={`ellipsis-${i}`} className="px-1 text-slate-400">
+                      …
+                    </span>
                   ) : (
                     <button
                       key={item}
                       onClick={() => setPage(item)}
                       className={`py-1.5 px-3 rounded text-xs font-medium transition-colors ${
-                        item === page ? "bg-[#95298E] text-white shadow-sm" : "btn-secondary"
+                        item === page
+                          ? "bg-[#95298E] text-white shadow-sm"
+                          : "btn-secondary"
                       }`}
                     >
                       {item}
                     </button>
-                  )
+                  ),
                 )}
 
-              <button className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next ›</button>
-              <button className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40" disabled={page >= totalPages} onClick={() => setPage(totalPages)}>»</button>
+              <button
+                className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Next ›
+              </button>
+              <button
+                className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-40"
+                disabled={page >= totalPages}
+                onClick={() => setPage(totalPages)}
+              >
+                »
+              </button>
             </div>
           </div>
         )}
