@@ -559,7 +559,7 @@ exports.downloadResults = async (req, res) => {
     summarySheet.addRows([
       { field: 'Site Name', value: metadata.site },
       { field: 'Bed Type', value: `${metadata.bedroom} Bed` },
-      { field: 'Area (m²)', value: metadata.area || '—' },
+      { field: 'House Area (m²)', value: metadata.area || '—' },
       { field: 'Total Winners', value: results.filter(r => r.status === 'WINNER').length },
       { field: 'Total Waitlist', value: results.filter(r => r.status === 'WAITLIST').length },
       { field: 'Drawn At', value: metadata.drawDate.toISOString() },
@@ -572,17 +572,18 @@ exports.downloadResults = async (req, res) => {
       const ws = wb.addWorksheet('Winners');
       ws.columns = [
         { header: 'Applicant ID', key: 'applicantId', width: 18 },
-        { header: 'Full Name', key: 'fullName', width: 25 },
         { header: 'Bed Type', key: 'bedType', width: 14 },
         { header: 'Site', key: 'site', width: 18 },
         { header: 'Subcity', key: 'subcity', width: 16 },
         { header: 'Block', key: 'block', width: 12 },
         { header: 'House Number', key: 'houseNumber', width: 16 },
         { header: 'Floor', key: 'floor', width: 10 },
-        { header: 'Net (m²)', key: 'netarea', width: 14 },
-        { header: 'Prop. (m²)', key: 'proportionalarea', width: 14 },
-        { header: 'Common (m²)', key: 'commonarea', width: 14 },
-        { header: 'Total (m²)', key: 'totalarea', width: 14 },
+        { header: 'Net area (m²)', key: 'netarea', width: 14 },
+        { header: 'Proportional area (m²)', key: 'proportionalarea', width: 14 },
+        { header: 'Common area (m²)', key: 'commonarea', width: 14 },
+        { header: 'Total area (m²)', key: 'totalarea', width: 14 },
+        { header: 'House area (m²)', key: 'area', width: 14 },
+
       ];
       winners.forEach((r) => {
         ws.addRow({
@@ -597,7 +598,8 @@ exports.downloadResults = async (req, res) => {
           netarea: r.netarea || '—',
           proportionalarea: r.proportionalarea || '—',
           commonarea: r.commonarea || '—',
-          totalarea: r.totalarea || r.area || '—',
+          totalarea: r.totalarea || '—',
+          area: r.area || '—',
         });
       });
       ws.getRow(1).font = { bold: true };
@@ -609,9 +611,8 @@ exports.downloadResults = async (req, res) => {
       const ws = wb.addWorksheet('Waitlist');
       ws.columns = [
         { header: 'Applicant ID', key: 'applicantId', width: 18 },
-        { header: 'Full Name', key: 'fullName', width: 25 },
         { header: 'Bed Type', key: 'bedType', width: 12 },
-        { header: 'Area (m²)', key: 'area', width: 14 },
+        { header: 'House Area (m²)', key: 'area', width: 14 },
         { header: 'Site', key: 'site', width: 16 },
       ];
       waitlist.forEach((r) => {
@@ -627,17 +628,18 @@ exports.downloadResults = async (req, res) => {
     }
 
     // 4. RESTORED ORIGINAL COMBINATION FILENAME PATTERN
-    const safeSite = metadata.site ? metadata.site.replace(/\s+/g, '-') : 'Site';
-    const areaValue = metadata.area ? String(metadata.area).trim() : '0m2';
-    const bedTypeValue = metadata.bedroom ? `${metadata.bedroom}Bed` : '0Bed';
-    const filename = `result_${safeSite}_${areaValue}_${bedTypeValue}.xlsx`;
+const safeSite = metadata.site ? metadata.site.replace(/\s+/g, '-') : 'Site';
+const areaValue = metadata.area ? String(metadata.area).trim() : '0m2';
+const bedTypeValue = metadata.bedroom ? `${metadata.bedroom}Bed` : '0Bed';
+const filename = `result_${safeSite}_${areaValue}_${bedTypeValue}.xlsx`;
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"; filename*=UTF-8''${encode大量Component(filename)}`);
-    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+// FIXED: Changed encode大量Component to encodeURIComponent
+res.setHeader('Content-Disposition', `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`);
+res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
 
-    await wb.xlsx.write(res);
-    res.end();
+await wb.xlsx.write(res);
+res.end();
   } catch (err) {
     console.error('Download results error:', err);
     if (!res.headersSent) {
